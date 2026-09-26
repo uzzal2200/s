@@ -1,0 +1,1832 @@
+E1-1	write a Python program to encrypt and decrypt a message using Caesar cipher.
+
+
+পৃথিবীর সবচেয়ে পুরনো encryption
+রোমান সম্রাট Julius Caesar ব্যবহার করতেন
+গোপন চিঠি পাঠাতে
+কীভাবে কাজ করে?
+প্রতিটি অক্ষর নির্দিষ্ট সংখ্যক ঘর এগিয়ে দাও
+
+shift = 3
+
+A → D
+B → E
+C → F
+...
+Z → C  ← শেষে গেলে আবার শুরু থেকে!
+উদাহরণ
+message = "HELLO"
+shift   = 3
+
+H → K
+E → H
+L → O
+L → O
+O → R
+
+HELLO → KHOOR
+Decrypt কীভাবে হয়?
+উল্টো দিকে সরাও!
+
+shift = 3 দিয়ে encrypt করেছিলাম
+shift = -3 দিয়ে decrypt হবে
+
+K → H
+H → E
+O → L
+O → L
+R → O
+
+KHOOR → HELLO ✅
+Code — ধাপে ধাপে
+caesar_encrypt() ফাংশন
+python
+def caesar_encrypt(text, shift):
+    result = ""
+খালি string দিয়ে শুরু
+এখানে encrypt করা অক্ষর জমা হবে
+python
+    for c in text:
+text এর প্রতিটি অক্ষর একে একে নাও
+
+"HELLO" → H, E, L, L, O আলাদা আলাদা আসবে
+python
+        if c.isalpha():
+অক্ষরটি কি A-Z বা a-z?
+
+'H' → ✅ অক্ষর
+' ' → ❌ স্পেস
+'!' → ❌ বিরামচিহ্ন
+python
+            base = 65 if c.isupper() else 97
+বড় হাত (A-Z) → base = 65  (A এর ASCII)
+ছোট হাত (a-z) → base = 97  (a এর ASCII)
+
+কেন?
+A = 65, B = 66 ... Z = 90
+a = 97, b = 98 ... z = 122
+
+base দিয়ে বিয়োগ করলে 0-25 এর মধ্যে আসে
+A → 65-65 = 0
+B → 66-65 = 1
+Z → 90-65 = 25
+python
+            result += chr((ord(c) - base + shift) % 26 + base)
+
+ধরো c = 'H', shift = 3:
+
+ord('H')       = 72
+72 - 65        = 7   ← 0-25 এ আনো
+7 + 3          = 10  ← shift যোগ করো
+10 % 26        = 10  ← 26 এর মধ্যে রাখো
+10 + 65        = 75  ← আবার ASCII তে ফেরো
+chr(75)        = 'K' ✅
+
+Z এর ক্ষেত্রে:
+25 + 3 = 28
+28 % 26 = 2 → C  ← ঘুরে আসে!
+python
+        else:
+            result += c
+স্পেস, ! এলে হুবহু রেখে দাও
+কোনো পরিবর্তন নেই
+caesar_decrypt() ফাংশন
+python
+def caesar_decrypt(text, shift):
+    return caesar_encrypt(text, -shift)
+encrypt এ +3 দিয়েছিলাম
+decrypt এ -3 দিলে উল্টো হয়
+
+একই ফাংশন, শুধু shift উল্টো!
+⚠️ Code এ ভুল
+python
+def caesar_decrypt(text, shift):
+    return caesar_encrypt(text, -shift)
+    return caesar_encrypt(text, -shift)  # ← দুইবার লেখা!
+দ্বিতীয় return কখনো চলবে না
+প্রথম return এ function শেষ হয়!
+একটা মুছে দাও
+Input ও Output
+python
+plain_text = input("Enter Plain Text: ")
+shift = int(input("Enter Shift Value: "))
+
+cipher_text = caesar_encrypt(plain_text, shift)
+decrypted = caesar_decrypt(cipher_text, shift)
+
+
+
+
+E1-2	Write a Python program to encrypt and decrypt a message using a One-Time Pad.
+
+Theory — OTP কী?
+OTP = One-Time Pad
+
+পৃথিবীর সবচেয়ে নিরাপদ encryption!
+তাত্ত্বিকভাবে সম্পূর্ণ অটুট!
+Caesar vs OTP
+Caesar:
+H → K  (সবসময় একই shift = 3)
+H → K  (আবারও একই!)
+
+OTP:
+H → K  (shift = 3)
+H → N  (shift = 6)  ← প্রতিবার আলাদা!
+কীভাবে কাজ করে?
+message এর প্রতিটি অক্ষরের জন্য
+আলাদা আলাদা random key ব্যবহার করো
+
+message = "HELLO"
+key     = "XQMBT"  ← সম্পূর্ণ random!
+
+H + X → ?
+E + Q → ?
+L + M → ?
+L + B → ?
+O + T → ?
+Encrypt সূত্র
+(t + k) % 26
+
+t = message অক্ষরের নম্বর (0-25)
+k = key অক্ষরের নম্বর (0-25)
+
+H=7, X=23
+(7 + 23) % 26 = 30 % 26 = 4 → E
+
+HELLO → EVXMH
+Decrypt সূত্র
+(c - k) % 26
+
+c = cipher অক্ষরের নম্বর
+k = key অক্ষরের নম্বর
+
+E=4, X=23
+(4 - 23) % 26 = -19 % 26 = 7 → H ✅
+
+Python এ % সবসময় ধনাত্মক দেয়!
+কেন সম্পূর্ণ অটুট?
+message = "HELLO"
+key     = "XQMBT"  ← random
+cipher  = "EVXMH"
+
+হ্যাকার "EVXMH" দেখে
+কিন্তু key না জানলে
+যেকোনো ৫ অক্ষরের message হতে পারে!
+
+"HELLO" হতে পারে
+"WORLD" হতে পারে
+"JAPAN" হতে পারে
+
+কোনটা আসল বোঝার উপায় নেই!
+OTP এর দুর্বলতা
+key অবশ্যই:
+১। message এর সমান দীর্ঘ হতে হবে
+২। সম্পূর্ণ random হতে হবে
+৩। একবারই ব্যবহার করতে হবে (One-Time!)
+৪। গোপনে আদান-প্রদান করতে হবে
+
+এই key আদান-প্রদানটাই সবচেয়ে কঠিন!
+Code — ধাপে ধাপে
+generate_key() ফাংশন
+python
+def generate_key(length):
+    return ''.join(random.choice(string.ascii_uppercase) for _ in range(length))
+string.ascii_uppercase:
+'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
+random.choice(...):
+২৬টি থেকে একটা random নাও
+
+for _ in range(length):
+message এর দৈর্ঘ্য যত, তত বার
+
+"HELLO" → length=5
+5 বার random অক্ষর নাও
+→ "XQMBT"
+
+''.join(...):
+['X','Q','M','B','T'] → "XQMBT"
+otp_encrypt() ফাংশন
+python
+def otp_encrypt(text, key):
+    return ''.join(chr((ord(t) - 65 + ord(k) - 65) % 26 + 65) 
+                   for t, k in zip(text.upper(), key))
+
+zip() কী করে:
+
+text = "HELLO"
+key  = "XQMBT"
+
+zip → (H,X),(E,Q),(L,M),(L,B),(O,T)
+
+হিসাব H + X:
+
+ধাপ	হিসাব	ফলাফল
+ord('H') - 65	H কে 0-25 এ আনো	7
+ord('X') - 65	X কে 0-25 এ আনো	23
+7 + 23	যোগ করো	30
+30 % 26	সীমার মধ্যে রাখো	4
+4 + 65	ASCII তে ফেরো	69
+chr(69)	অক্ষরে বদলাও	E
+otp_decrypt() ফাংশন
+python
+def otp_decrypt(cipher, key):
+    return ''.join(chr((ord(c) - ord(k)) % 26 + 65) 
+                   for c, k in zip(cipher, key))
+
+হিসাব E - X:
+
+ধাপ	হিসাব	ফলাফল
+ord('E')	E এর ASCII	69
+ord('X')	X এর ASCII	88
+69 - 88	বিয়োগ	-19
+-19 % 26	Python ধনাত্মক দেয়	7
+7 + 65	ASCII তে ফেরো	72
+chr(72)	অক্ষরে বদলাও	H ✅
+সব অক্ষরের হিসাব
+Message	Key	Encrypt	Decrypt
+H (7)	X (23)	(7+23)%26=4→E	(4-23)%26=7→H
+E (4)	Q (16)	(4+16)%26=20→U	(20-16)%26=4→E
+L (11)	M (12)	(11+12)%26=23→X	(23-12)%26=11→L
+L (11)	B (1)	(11+1)%26=12→M	(12-1)%26=11→L
+O (14)	T (19)	(14+19)%26=7→H	(7-19)%26=14→O
+পুরো আউটপুট
+plain text: HELLO
+
+Key:       XQMBT
+Encrypted: EUXMH
+Decrypted: HELLO ✅
+
+
+
+
+
+
+
+E1-3	Write a Python program to encrypt and decrypt a message using a Monoalphabetic Substitution Cipher.
+
+Theory — Monoalphabetic Cipher কী?
+Mono = এক
+Alphabetic = বর্ণমালা
+
+একটাই fixed mapping সারা message এ ব্যবহার হয়
+Caesar vs Monoalphabetic
+Caesar:
+A→D, B→E, C→F ...  (নিয়ম মেনে সরে)
+সবসময় একই দূরত্ব!
+
+Monoalphabetic:
+A→X, B→M, C→Q ...  (সম্পূর্ণ এলোমেলো!)
+কোনো নিয়ম নেই!
+কীভাবে কাজ করে?
+২৬টি অক্ষরের জন্য ২৬টি আলাদা mapping:
+
+A → X
+B → M
+C → Q
+D → B
+E → T
+...
+Z → P
+
+এটাই cipher key!
+Encrypt কীভাবে হয়?
+message = "HELLO"
+mapping: H→P, E→T, L→Q, O→Z
+
+H → P
+E → T
+L → Q
+L → Q  ← একই অক্ষর, একই result!
+O → Z
+
+Encrypted: "PTQQZ"
+Decrypt কীভাবে হয়?
+mapping উল্টে দাও:
+H→P ছিল → P→H হবে
+E→T ছিল → T→E হবে
+L→Q ছিল → Q→L হবে
+O→Z ছিল → Z→O হবে
+
+P → H
+T → E
+Q → L
+Q → L
+Z → O
+
+Decrypted: "HELLO" ✅
+কেন নিরাপদ?
+Caesar এ মাত্র ২৬টি চেষ্টা
+Monoalphabetic এ ২৬! চেষ্টা
+= 403,291,461,126,605,635,584,000,000
+= ৪ কোটি কোটি কোটি!
+
+Brute Force এ ভাঙা অনেক কঠিন!
+তবু দুর্বলতা আছে!
+ইংরেজিতে E সবচেয়ে বেশি আসে (13%)
+Cipher এ যে অক্ষর সবচেয়ে বেশি
+→ সেটাই E হওয়ার সম্ভাবনা বেশি!
+
+এটাই Frequency Analysis!
+Code — ধাপে ধাপে
+generate_cipher() ফাংশন
+python
+def generate_cipher():
+    return dict(zip(string.ascii_uppercase, 
+                    random.sample(string.ascii_uppercase, 26)))
+string.ascii_uppercase:
+'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
+random.sample(..., 26):
+২৬টি অক্ষর এলোমেলো করে নাও
+['X','M','Q','B','T','W'...]
+একই অক্ষর দুইবার আসে না!
+
+zip করলে:
+(A,X),(B,M),(C,Q),(D,B)...
+
+dict করলে:
+{'A':'X','B':'M','C':'Q'...}
+এটাই cipher key!
+encrypt() ফাংশন
+python
+def encrypt(text, cipher):
+    return ''.join(cipher.get(c, c) for c in text.upper())
+text = "HELLO"
+cipher = {'H':'P','E':'T','L':'Q','O':'Z'}
+
+text.upper() → "HELLO"
+
+প্রতিটি অক্ষরের জন্য:
+cipher.get('H','H') → 'P'  ← cipher এ আছে
+cipher.get('E','E') → 'T'  ← cipher এ আছে
+cipher.get('L','L') → 'Q'  ← cipher এ আছে
+cipher.get('L','L') → 'Q'  ← একই অক্ষর একই result!
+cipher.get('O','O') → 'Z'  ← cipher এ আছে
+
+স্পেস, ! এলে:
+cipher.get(' ',' ') → ' '  ← নিজেই থাকে
+
+''.join(['P','T','Q','Q','Z'])
+→ "PTQQZ" ✅
+decrypt() ফাংশন
+python
+def decrypt(ciphertext, cipher):
+    reverse_cipher = {v: k for k, v in cipher.items()}
+    return ''.join(reverse_cipher.get(c, c) for c in ciphertext.upper())
+
+reverse_cipher বানাও:
+
+cipher.items():
+[('A','X'),('B','M'),('H','P'),('E','T')...]
+  k   v      k   v     k   v    k   v
+
+{v:k for k,v in ...}:
+উল্টো করো → value হবে key, key হবে value
+
+{'X':'A','M':'B','P':'H','T':'E'...}
+
+তারপর decrypt:
+
+ciphertext = "PTQQZ"
+
+reverse_cipher.get('P','P') → 'H'
+reverse_cipher.get('T','T') → 'E'
+reverse_cipher.get('Q','Q') → 'L'
+reverse_cipher.get('Q','Q') → 'L'
+reverse_cipher.get('Z','Z') → 'O'
+
+"HELLO" ✅
+পুরো আউটপুট
+Enter the Plain text: HELLO
+
+Input Text     : HELLO
+Cipher Mapping : {'A':'X','B':'M',...,'H':'P','E':'T','L':'Q','O':'Z'...}
+Encrypted Text : PTQQZ
+Decrypted Text : HELLO ✅
+
+
+E1-5	Write a Python program to decrypt a Caesar Cipher encrypted message using brute-force attack.
+
+Theory — Brute Force Attack কী?
+সবগুলো সম্ভাব্য উত্তর
+একে একে চেষ্টা করো
+যতক্ষণ না সঠিকটা পাও
+বাস্তব উদাহরণ
+তালার পাসওয়ার্ড ভুলে গেছ (0000-9999)
+
+0000 → ❌
+0001 → ❌
+...
+1234 → ✅ খুলে গেল!
+
+এটাই Brute Force!
+Caesar Cipher এ কেন সহজ?
+মাত্র ২৬টি সম্ভাব্য shift
+→ সবগুলো চেষ্টা করলেই হবে!
+
+Shift 0 → KHOOR ❌
+Shift 1 → JGNNQ ❌
+Shift 2 → IFMMP ❌
+Shift 3 → HELLO ✅ আসল message!
+Code — ধাপে ধাপে
+encrypt() ফাংশন
+python
+def encrypt(text, shift):
+    return ''.join(
+        chr((ord(c) - (65 if c.isupper() else 97) + shift) % 26 + (65 if c.isupper() else 97))
+        if c.isalpha() else c for c in text)
+
+ধরো c = 'H', shift = 3:
+
+c.isupper() → True → base = 65
+
+ord('H') - 65 = 7   ← 0-25 এ আনো
+7 + 3          = 10  ← shift যোগ
+10 % 26        = 10  ← সীমার মধ্যে রাখো
+10 + 65        = 75  ← ASCII তে ফেরো
+chr(75)        = 'K' ✅
+
+স্পেস, ! → হুবহু রাখো
+decrypt() ফাংশন
+python
+def decrypt(text, shift):
+    return encrypt(text, -shift)
+encrypt এ +3 দিয়েছিলাম
+decrypt এ -3 দিলে উল্টো হয়
+
+K → (10 - 3) = 7 → H ✅
+brute_force() ফাংশন
+python
+def brute_force(cipher):
+    for shift in range(26):
+        print(f"Shift {shift:2d}:", decrypt(cipher, shift))
+range(26) → 0,1,2,3...25
+
+shift=0  → decrypt("KHOOR", 0) → KHOOR ❌
+shift=1  → decrypt("KHOOR", 1) → JGNNQ ❌
+shift=2  → decrypt("KHOOR", 2) → IFMMP ❌
+shift=3  → decrypt("KHOOR", 3) → HELLO ✅
+...
+shift=25 → decrypt("KHOOR",25) → LIPPS ❌
+
+f"Shift {shift:2d}" মানে:
+shift=3  → "Shift  3"  ← ২ ঘর জায়গা
+shift=15 → "Shift 15"  ← সুন্দর সারিবদ্ধ
+Input ও Output
+python
+text = input("Plain text: ")     # "HELLO"
+shift = int(input("Shift: "))    # 3
+
+cipher = encrypt(text, shift)    # "KHOOR"
+print("Encrypted:", cipher)
+print("Decrypted:", decrypt(cipher, shift))
+print()
+brute_force(cipher)
+পুরো আউটপুট
+Plain text: HELLO
+Shift: 3
+
+Encrypted: KHOOR
+Decrypted: HELLO
+
+Shift  0: KHOOR  ❌
+Shift  1: JGNNQ  ❌
+Shift  2: IFMMP  ❌
+Shift  3: HELLO  ✅ আসল message!
+Shift  4: GDKKN  ❌
+...
+Shift 25: LIPPS  ❌
+
+
+
+E1-6	Write a Python program to encrypt and decrypt a message using the Playfair Cipher.
+
+Theory — Playfair Cipher কী?
+Caesar Cipher → একটা অক্ষর নিয়ে কাজ করে
+Playfair      → দুটো অক্ষর একসাথে নিয়ে কাজ করে
+Key দিয়ে ৫×৫ matrix বানায়
+৫×৫ Matrix কীভাবে বানায়?
+key = "MONARCHY"
+
+ধাপ ১ → key লেখো, duplicate সরাও
+MONARCHY → MONARCHY (duplicate নেই)
+
+ধাপ ২ → বাকি alphabet যোগ করো (J বাদ)
+MONARCHY + ABCDEFGHIKLMNOPQRSTUVWXYZ
+
+ধাপ ৩ → duplicate সরাও
+MONARCHYBDEFGIKLPQSTUVWXZ
+
+ধাপ ৪ → ৫×৫ matrix বানাও
+M  O  N  A  R
+C  H  Y  B  D
+E  F  G  I  K
+L  P  Q  S  T
+U  V  W  X  Z
+
+J কে I হিসেবে ধরা হয়, তাই J বাদ!
+
+Text Prepare কীভাবে হয়?
+message = "INSTRUMENTS"
+
+ধাপ ১ → জোড়া বানাও
+IN ST RU ME NT S
+
+ধাপ ২ → একই জোড়ায় একই অক্ষর? X দাও
+IN ST RU ME NT SX  ← শেষে একা, X যোগ
+
+জোড়া: IN ST RU ME NT SX
+৩টি নিয়মে Encrypt
+Matrix:
+M  O  N  A  R
+C  H  Y  B  D
+E  F  G  I  K
+L  P  Q  S  T
+U  V  W  X  Z
+
+নিয়ম ১ — একই Row:
+
+দুটো অক্ষর একই row তে
+→ ডানে সরাও (+1)
+
+M O → (0,0)(0,1)
+একই row! ডানে সরাও
+M → O
+O → N
+
+নিয়ম ২ — একই Column:
+
+দুটো অক্ষর একই column এ
+→ নিচে সরাও (+1)
+
+M C → (0,0)(1,0)
+একই column! নিচে সরাও
+M → C
+C → E
+
+নিয়ম ৩ — Rectangle:
+
+একই row বা column না হলে
+→ rectangle বানাও, কোণা বদলাও
+
+I N → (2,3)(0,2)
+rectangle!
+I → G  ← I এর row, N এর column
+N → S  ← N এর row, I এর column
+Decrypt নিয়ম
+নিয়ম ১ → বামে সরাও (-1)
+নিয়ম ২ → উপরে সরাও (-1)
+নিয়ম ৩ → একই rectangle, কোণা বদলাও
+Code — ধাপে ধাপে
+make_matrix() ফাংশন
+python
+def make_matrix(key):
+    key = "".join(dict.fromkeys((key+"ABCDEFGHIKLMNOPQRSTUVWXYZ").upper().replace("J","I")))
+    return [key[i:i+5] for i in range(0,25,5)]
+key = "MONARCHY"
+
+key + alphabet:
+"MONARCHYABCDEFGHIKLMNOPQRSTUVWXYZ"
+
+.upper() → সব বড় হাত
+.replace("J","I") → J কে I বানাও
+
+dict.fromkeys() → duplicate সরাও
+"MONARCHYBDEFGIKLPQSTUVWXZ"
+
+[key[i:i+5] for i in range(0,25,5)]:
+i=0  → "MONAR"
+i=5  → "CHYBD"
+i=10 → "EFGIK"
+i=15 → "LPQST"
+i=20 → "UVWXZ"
+
+Matrix:
+['MONAR']
+['CHYBD']
+['EFGIK']
+['LPQST']
+['UVWXZ']
+find() ফাংশন
+python
+def find(m, c):
+    for i in range(5):
+        if c in m[i]:
+            return i, m[i].index(c)
+m এ 'I' খোঁজো:
+
+i=0 → 'MONAR' → নেই
+i=1 → 'CHYBD' → নেই
+i=2 → 'EFGIK' → আছে! index=3
+
+return (2, 3) ✅
+prepare() ফাংশন
+python
+def prepare(t):
+    t = t.upper().replace("J","I").replace(" ","")
+    p, i = [], 0
+    while i < len(t):
+        a = t[i]; b = t[i+1] if i+1<len(t) else 'X'
+        if a == b: p.append(a+'X'); i += 1
+        else: p.append(a+b); i += 2
+    return p
+t = "INSTRUMENTS"
+
+.upper() → "INSTRUMENTS"
+.replace("J","I") → পরিবর্তন নেই
+.replace(" ","") → স্পেস নেই
+
+জোড়া বানাও:
+i=0  → a='I', b='N' → আলাদা → "IN", i=2
+i=2  → a='S', b='T' → আলাদা → "ST", i=4
+i=4  → a='R', b='U' → আলাদা → "RU", i=6
+i=6  → a='M', b='E' → আলাদা → "ME", i=8
+i=8  → a='N', b='T' → আলাদা → "NT", i=10
+i=10 → a='S', b=?   → শেষে একা → "SX", i=11
+
+জোড়া: ['IN','ST','RU','ME','NT','SX']
+encrypt() ফাংশন
+python
+def encrypt(text, key):
+    m = make_matrix(key)
+    res = ""
+    for a,b in prepare(text):
+        r1,c1 = find(m,a); r2,c2 = find(m,b)
+        if r1==r2: res += m[r1][(c1+1)%5] + m[r2][(c2+1)%5]
+        elif c1==c2: res += m[(r1+1)%5][c1] + m[(r2+1)%5][c2]
+        else: res += m[r1][c2] + m[r2][c1]
+    return res
+
+জোড়া IN এর হিসাব:
+
+Matrix:
+M  O  N  A  R   ← row 0
+C  H  Y  B  D   ← row 1
+E  F  G  I  K   ← row 2
+L  P  Q  S  T   ← row 3
+U  V  W  X  Z   ← row 4
+
+I → find → (2,3)
+N → find → (0,2)
+
+r1=2, r2=0 → আলাদা row
+c1=3, c2=2 → আলাদা column
+→ নিয়ম ৩: Rectangle!
+
+I → m[r1][c2] = m[2][2] = 'G'
+N → m[r2][c1] = m[0][3] = 'A'
+
+IN → GA
+decrypt() ফাংশন
+python
+def decrypt(text, key):
+    m = make_matrix(key)
+    res = ""
+    for i in range(0,len(text),2):
+        a,b = text[i], text[i+1]
+        r1,c1 = find(m,a); r2,c2 = find(m,b)
+        if r1==r2: res += m[r1][(c1-1)%5] + m[r2][(c2-1)%5]
+        elif c1==c2: res += m[(r1-1)%5][c1] + m[(r2-1)%5][c2]
+        else: res += m[r1][c2] + m[r2][c1]
+    return res
+Encrypt এর উল্টো:
+
+নিয়ম ১ → ডানে (+1) ছিল → বামে (-1)
+নিয়ম ২ → নিচে (+1) ছিল → উপরে (-1)
+নিয়ম ৩ → Rectangle একই!
+পুরো আউটপুট
+Key    : MONARCHY
+Message: INSTRUMENTS
+
+Matrix:
+M  O  N  A  R
+C  H  Y  B  D
+E  F  G  I  K
+L  P  Q  S  T
+U  V  W  X  Z
+
+জোড়া: IN ST RU ME NT SX
+
+Encrypted: GATLMZCLRQXA
+Decrypted: INSTRUMENTSX  ← শেষে X padding!
+এক কথায়
+make_matrix → ৫×৫ matrix বানাও
+find        → matrix এ অক্ষর খোঁজো
+prepare     → জোড়া বানাও
+encrypt     → ৩ নিয়মে জোড়া বদলাও
+decrypt     → ৩ নিয়মে উল্টো করো
+
+
+
+E1-7	Write a Python program to encrypt and decrypt a message using the 2x2 Hill Cipher.
+
+
+Theory — Hill Cipher কী?
+Caesar → একটা অক্ষর নিয়ে কাজ করে
+Playfair → দুটো অক্ষর নিয়ে কাজ করে
+Hill → দুটো অক্ষর নিয়ে Matrix দিয়ে কাজ করে
+Matrix কী?
+২×২ matrix:
+
+[a b]   [3 3]
+[c d] = [2 5]
+
+৪টি সংখ্যা দিয়ে তৈরি
+কীভাবে Encrypt করে?
+message = "HE"
+
+H = 7  (A=0, B=1, C=2 ... H=7)
+E = 4
+
+pair = [7]
+       [4]
+
+key × pair:
+[3 3] × [7] = [(3×7)+(3×4)] = [21+12] = [33]
+[2 5]   [4]   [(2×7)+(5×4)]   [14+20]   [34]
+
+তারপর % 26:
+33 % 26 = 7  → chr(7+65)  = H
+34 % 26 = 8  → chr(8+65)  = I
+
+HE → HI ✅
+কীভাবে Decrypt করে?
+Encrypt এ key matrix দিয়ে গুণ করেছিলাম
+Decrypt এ inverse matrix দিয়ে গুণ করতে হবে
+
+Inverse বের করতে ৩টি ধাপ:
+১। Determinant বের করো
+২। Adjugate matrix বানাও
+৩। Inverse matrix বানাও
+
+Determinant:
+
+[3 3]
+[2 5]
+
+det = (3×5) - (3×2)
+    = 15 - 6
+    = 9
+
+Modular Inverse:
+
+det_inv = mod_inverse(9, 26)
+9 × ? % 26 = 1
+9 × 3 = 27
+27 % 26 = 1 ✅
+det_inv = 3
+
+Adjugate:
+
+মূল:      [a b] = [3 3]
+          [c d]   [2 5]
+
+Adjugate: [ d -b] = [ 5 -3]
+          [-c  a]   [-2  3]
+
+Inverse Matrix:
+
+inv = det_inv × adj % 26
+    = 3 × [ 5 -3] % 26
+          [-2  3]
+
+    = [15  -9] % 26
+      [-6   9]
+
+    = [15  17]  ← -9 % 26 = 17
+      [20   9]  ← -6 % 26 = 20
+Code — ধাপে ধাপে
+mod_inverse() ফাংশন
+python
+def mod_inverse(a, m):
+    a = a % m
+    for x in range(1, m):
+        if (a * x) % m == 1:
+            return x
+    return None
+এমন x খোঁজো যেন:
+a × x % m = 1
+
+mod_inverse(9, 26):
+x=1 → 9×1 % 26 = 9   ❌
+x=2 → 9×2 % 26 = 18  ❌
+x=3 → 9×3 % 26 = 1   ✅ → return 3
+hill_encrypt() ফাংশন
+python
+def hill_encrypt(text, key_matrix):
+    text = text.upper().replace(" ", "")
+    if len(text) % 2 != 0:
+        text += 'X'
+text = "HELP"
+.upper()       → "HELP"
+.replace(" ","")→ স্পেস সরাও
+len % 2 != 0   → বেজোড় হলে X যোগ
+
+"HEL" → "HELX"
+"HELP" → "HELP" ← ঠিক আছে
+python
+    for i in range(0, len(text), 2):
+        pair = np.array([ord(text[i])-65, ord(text[i+1])-65])
+"HELP" → দুটো দুটো নাও:
+i=0 → H, E
+i=2 → L, P
+
+H = ord('H') - 65 = 7
+E = ord('E') - 65 = 4
+
+pair = [7, 4]
+python
+        enc = np.dot(key_matrix, pair) % 26
+        result += chr(enc[0]+65) + chr(enc[1]+65)
+np.dot = matrix গুণ
+
+[3 3] × [7] = [33] % 26 = [7]  → chr(72)  = H
+[2 5]   [4]   [34]        [8]  → chr(73)  = I
+
+HE → HI
+hill_decrypt() ফাংশন
+python
+def hill_decrypt(cipher, key_matrix):
+    det = int(round(np.linalg.det(key_matrix)))
+    det_inv = mod_inverse(det, 26)
+det = (3×5) - (3×2) = 9
+det_inv = mod_inverse(9, 26) = 3
+python
+    adj = np.array([[key_matrix[1][1], -key_matrix[0][1]],
+                     [-key_matrix[1][0], key_matrix[0][0]]])
+key_matrix = [3 3]
+             [2 5]
+
+adj = [ 5 -3]
+      [-2  3]
+python
+    inv_matrix = (det_inv * adj) % 26
+3 × [ 5 -3] % 26 = [15 17]
+    [-2  3]         [20  9]
+python
+    for i in range(0, len(cipher), 2):
+        pair = np.array([ord(cipher[i])-65, ord(cipher[i+1])-65])
+        dec = np.dot(inv_matrix, pair) % 26
+        result += chr(int(dec[0])+65) + chr(int(dec[1])+65)
+cipher = "HI"
+H = 7, I = 8
+
+inv × pair:
+[15 17] × [7] = [15×7+17×8] = [241] % 26 = [7] → H
+[20  9]   [8]   [20×7+ 9×8]   [212]        [4] → E
+
+HI → HE ✅
+পুরো আউটপুট
+Enter message: HELP
+a=3, b=3, c=2, d=5
+
+Key Matrix:
+[[3 3]
+ [2 5]]
+
+Message   : HELP
+Encrypted : HIAT
+Decrypted : HELP ✅
+
+প্রতিটি জোড়ার হিসাব:
+
+HE → [7,4] → matrix গুণ → [33,34] → %26 → [7,8]  → HI
+LP → [11,15]→ matrix গুণ → [78,97] → %26 → [0,19] → AT
+
+Encrypted: HIAT ✅
+এক কথায়
+Encrypt:
+দুটো অক্ষর নাও
+→ key matrix দিয়ে গুণ
+→ % 26
+
+Decrypt:
+দুটো অক্ষর নাও
+→ inverse matrix দিয়ে গুণ
+→ % 26
+
+
+E1-8	Write a Python program to encrypt a message using a Transposition cipher with double encryption.
+Theory — Transposition Cipher কী?
+Caesar, Hill → অক্ষর বদলায়
+Transposition → অক্ষর বদলায় না, শুধু জায়গা বদলায়!
+
+HELLO → LLHOE (একই অক্ষর, জায়গা বদলেছে)
+কীভাবে কাজ করে?
+message = "MEET ME AFTER PARTY"
+key     = "ZEBRA"
+
+ধাপ ১ → স্পেস সরাও
+"MEETMEAFTERPARTY"
+
+ধাপ ২ → key এর দৈর্ঘ্য = কলাম সংখ্যা
+key = ZEBRA → ৫টি অক্ষর → ৫ কলাম
+
+ধাপ ৩ → Grid বানাও
+Col:  0    1    2    3    4
+Key:  Z    E    B    R    A
+row0: M    E    E    T    M
+row1: E    A    F    T    E
+row2: R    P    A    R    T
+row3: Y    X    X    X    X  ← X দিয়ে ভরাট
+
+ধাপ ৪ → key কে A-Z অনুযায়ী সাজাও
+Z=4, E=1, B=2, R=3, A=0
+
+A-Z ক্রম:
+A(col 4) → METX
+B(col 2) → EFAX
+E(col 1) → EAPX
+R(col 3) → TTRX
+Z(col 0) → MERY
+
+জোড়া লাগাও:
+METX+EFAX+EAPX+TTRX+MERY
+= METXEFAXEAPXTTRXMERY ✅
+Double Encryption কী?
+একবার encrypt করা message
+আবার একই key দিয়ে encrypt করো
+
+plaintext → encrypt → once
+once      → encrypt → twice
+
+দুইবার করলে আরো কঠিন হয়!
+Code — ধাপে ধাপে
+transposition_encrypt() ফাংশন
+python
+def transposition_encrypt(text, key):
+    text = text.replace(" ", "")
+"MEET ME AFTER PARTY"
+স্পেস সরাও →
+"MEETMEAFTERPARTY"
+python
+    cols = len(key)
+    rows = math.ceil(len(text)/cols)
+key = "ZEBRA" → cols = 5
+
+text = "MEETMEAFTERPARTY" → ১৬টি অক্ষর
+
+math.ceil(16/5)
+= math.ceil(3.2)
+= 4  ← উপরের দিকে গোল করে
+
+মানে ৪ সারি, ৫ কলাম
+python
+    padded = text.ljust(rows*cols, 'X')
+rows × cols = 4 × 5 = 20 ঘর দরকার
+text এ আছে ১৬টি
+বাকি ৪টি X দিয়ে ভরাট
+
+"MEETMEAFTERPARTY" → "MEETMEAFTERPARTYXXXX"
+python
+    grid = [padded[i:i+cols] for i in range(0, len(padded), cols)]
+৫টি করে ভাগ করো:
+
+i=0  → "MEETM"
+i=5  → "EAFTE"
+i=10 → "RPART"
+i=15 → "YXXXX"
+
+grid:
+Col:  0  1  2  3  4
+      Z  E  B  R  A
+row0: M  E  E  T  M
+row1: E  A  F  T  E
+row2: R  P  A  R  T
+row3: Y  X  X  X  X
+python
+    order = sorted(range(cols), key=lambda k: key[k])
+key = "ZEBRA"
+       Z  E  B  R  A
+col:   0  1  2  3  4
+
+A-Z অনুযায়ী সাজাও:
+A(4), B(2), E(1), R(3), Z(0)
+
+order = [4, 2, 1, 3, 0]
+python
+    for col in order:
+        for row in grid:
+            result += row[col]
+order = [4, 2, 1, 3, 0]
+
+col=4 (A): M E T X → METX
+col=2 (B): E F A X → EFAX
+col=1 (E): E A P X → EAPX
+col=3 (R): T T R X → TTRX
+col=0 (Z): M E R Y → MERY
+
+জোড়া → METXEFAXEAPXTTRXMERY ✅
+Double Encryption
+python
+once  = transposition_encrypt(msg, key)
+twice = transposition_encrypt(once, key)
+
+once → twice হিসাব:
+
+once = "METXEFAXEAPXTTRXMERY"
+       ২০টি অক্ষর, ৫ কলাম → ৪ সারি
+
+Grid:
+Col:  0  1  2  3  4
+      Z  E  B  R  A
+row0: M  E  T  X  E
+row1: F  A  X  E  A
+row2: P  X  T  T  R
+row3: X  M  E  R  Y
+
+order = [4, 2, 1, 3, 0]
+
+col=4 (A): E A R Y → EARY
+col=2 (B): T X T E → TXTE
+col=1 (E): E A X M → EAXM
+col=3 (R): X E T R → XETR
+col=0 (Z): M F P X → MFPX
+
+twice = EARYTXTEEA XMXETRMFPX
+      = EARYTXTEEAXMXETRMFPX ✅
+পুরো আউটপুট
+Enter message: MEET ME AFTER PARTY
+Enter key: ZEBRA
+
+Plaintext         : MEETMEAFTERPARTY
+Single encryption : METXEFAXEAPXTTRXMERY
+Double encryption : EARYTXTEEAXMXETRMFPX
+এক কথায়
+Transposition = জায়গা বদলায়, অক্ষর বদলায় না
+
+ধাপ ১ → Grid এ সাজাও
+ধাপ ২ → A-Z ক্রমে কলাম পড়ো → Single
+ধাপ ৩ → আবার একই কাজ → Double → আরো নিরাপদ!
+
+
+
+
+E1-9	Write a Python program to encrypt and decrypt a message using the ElGamal cryptosystem.
+
+
+
+Theory — ElGamal কী?
+Diffie-Hellman → শুধু key আদান-প্রদান
+ElGamal        → message encrypt + decrypt করে
+
+Diffie-Hellman এর উপর ভিত্তি করে বানানো
+কারা আছে?
+Bob   → message পাবে (receiver)
+Alice → message পাঠাবে (sender)
+হ্যাকার → মাঝখানে সব দেখছে
+৩টি ধাপ
+ধাপ ১ — Key তৈরি (Bob করে)
+সবাই জানে:
+p = 7  (prime number)
+g = 3  (primitive root)
+
+শুধু Bob জানে:
+x = 4  (private key)
+
+Public key বানায়:
+y = g^x mod p
+y = 3^4 mod 7
+y = 81 mod 7
+y = 4
+
+Public key = (p, g, y) = (7, 3, 4)
+সবাইকে দিল!
+ধাপ ২ — Encryption (Alice করে)
+message = 5
+Bob এর public key = (7, 3, 4)
+
+Alice random k নেয়:
+k = 2  (শুধু Alice জানে)
+
+c1 বানায়:
+c1 = g^k mod p
+c1 = 3^2 mod 7
+c1 = 9 mod 7
+c1 = 2
+
+c2 বানায়:
+c2 = m × y^k mod p
+c2 = 5 × 4^2 mod 7
+c2 = 5 × 16 mod 7
+c2 = 80 mod 7
+c2 = 3
+
+Alice Bob কে পাঠাল:
+Encrypted = (c1, c2) = (2, 3)
+ধাপ ৩ — Decryption (Bob করে)
+Bob পেল: (c1, c2) = (2, 3)
+Bob এর private key: x = 4
+
+s বের করে:
+s = c1^x mod p
+s = 2^4 mod 7
+s = 16 mod 7
+s = 2
+
+s এর inverse বের করে:
+s × s^(-1) mod p = 1
+2 × ? mod 7 = 1
+2 × 4 = 8
+8 mod 7 = 1 ✅
+s^(-1) = 4
+
+message বের করে:
+m = c2 × s^(-1) mod p
+m = 3 × 4 mod 7
+m = 12 mod 7
+m = 5 ✅
+হ্যাকার কী দেখে?
+হ্যাকার দেখে:     হ্যাকার দেখে না:
+p = 7   ✅         x = 4  ❌ Bob এর private key
+g = 3   ✅         k = 2  ❌ Alice এর random key
+y = 4   ✅
+c1 = 2  ✅
+c2 = 3  ✅
+
+message বের করতে পারে না! ✅
+Code — ধাপে ধাপে
+Input
+python
+p = int(input("Enter prime (p): "))           # p = 7
+g = int(input("Enter primitive root (g): "))  # g = 3
+x = int(input("Enter private key (x): "))     # x = 4
+m = int(input("Enter message (<p): "))        # m = 5
+Public Key
+python
+y = pow(g, x, p)
+print("Public Key:", (p, g, y))
+y = pow(3, 4, 7)
+  = 3^4 mod 7
+  = 81 mod 7
+  = 4
+
+Public Key: (7, 3, 4) ✅
+Encryption
+python
+k = random.randint(1, p-2)
+c1 = pow(g, k, p)
+c2 = (m * pow(y, k, p)) % p
+k = random.randint(1, 5)  ← 1 থেকে p-2 পর্যন্ত
+k = 2  (random)
+
+c1 = pow(3, 2, 7)
+   = 3^2 mod 7
+   = 9 mod 7
+   = 2
+
+pow(y, k, p) = pow(4, 2, 7)
+             = 16 mod 7
+             = 2
+
+c2 = (5 × 2) % 7
+   = 10 % 7
+   = 3
+
+Encrypted: (2, 3) ✅
+Decryption
+python
+s = pow(c1, x, p)
+m_dec = (c2 * pow(s, -1, p)) % p
+s = pow(2, 4, 7)
+  = 2^4 mod 7
+  = 16 mod 7
+  = 2
+
+pow(s, -1, p) = pow(2, -1, 7)
+              = s এর modular inverse
+              = 4
+(কারণ: 2 × 4 mod 7 = 1 ✅)
+
+m_dec = (3 × 4) % 7
+      = 12 % 7
+      = 5 ✅
+পুরো আউটপুট
+Enter prime (p): 7
+Enter primitive root (g): 3
+Enter private key (x): 4
+Enter message (<p): 5
+
+Public Key: (7, 3, 4)
+
+Encrypted: (3,6)
+Decrypted: 5 
+এক কথায়
+Bob  → public key বানায় → সবাইকে দেয়
+Alice→ সেই key দিয়ে encrypt করে
+Bob  → private key দিয়ে decrypt করে
+
+
+
+
+E2-1	Write a Python program to encrypt and decrypt a message using DES.
+
+Theory — DES কী?
+DES = Data Encryption Standard
+
+১৯৭৭ সালে বানানো
+একটাই key দিয়ে encrypt ও decrypt করে
+তাই বলে Symmetric Encryption
+মূল ধারণা
+RSA → দুটো key (Public + Private)
+DES → একটাই key (Secret)
+
+একই key দিয়ে:
+Encrypt → তালা লাগাও
+Decrypt → খোলো
+Block কী?
+DES একসাথে ৮টি অক্ষর নিয়ে কাজ করে
+
+message = "HELLO WORLD"
+Block 1 = "HELLO WO"  ← ৮টি
+Block 2 = "RLD"       ← মাত্র ৩টি!
+Padding কী?
+Block এ ৮টি না হলে ভরাট করো
+
+"RLD" → "RLD\x05\x05\x05\x05\x05"
+         ↑
+         ৫টি ভরাট হলো
+
+Decrypt এর পরে ভরাট সরাও → Unpadding
+ECB Mode কী?
+ECB = Electronic Codebook
+
+প্রতিটি Block আলাদা আলাদা encrypt হয়
+
+Block 1 → Encrypt → Cipher 1
+Block 2 → Encrypt → Cipher 2
+Block 3 → Encrypt → Cipher 3
+Key কেন ৮ byte?
+DES এ key = 64 bit = 8 byte
+
+৮ অক্ষরের বেশি দিলে → কেটে ফেলো
+৮ অক্ষরের কম দিলে  → স্পেস দিয়ে ভরাট
+Code — ধাপে ধাপে
+encrypt() ফাংশন
+python
+def encrypt(msg, key):
+    key = key.encode()[:8].ljust(8, b' ')
+    cipher = DES.new(key, DES.MODE_ECB)
+    ct = cipher.encrypt(pad(msg.encode(), 8))
+    return ct
+
+ধাপ ১ — key ঠিক করো:
+
+python
+key.encode()[:8].ljust(8, b' ')
+key = "SECRET12ABC"
+
+.encode()  → b'SECRET12ABC'  ← bytes এ বদলাও
+[:8]       → b'SECRET12'     ← ৮টির বেশি কেটে ফেলো
+.ljust(8, b' ') → কম হলে স্পেস দিয়ে ভরাট
+
+"HI" → b'HI      '  ← ৬টি স্পেস যোগ হলো
+
+ধাপ ২ — cipher object বানাও:
+
+python
+cipher = DES.new(key, DES.MODE_ECB)
+key      → চাবি দাও
+MODE_ECB → ECB mode ব্যবহার করো
+
+ধাপ ৩ — encrypt করো:
+
+python
+ct = cipher.encrypt(pad(msg.encode(), 8))
+msg = "HELLO"
+
+msg.encode() → b'HELLO'  ← bytes এ বদলাও
+
+pad(b'HELLO', 8):
+৫টি অক্ষর, ৮টি লাগবে
+বাকি ৩টি ভরাট
+→ b'HELLO\x03\x03\x03'
+
+cipher.encrypt(...):
+→ b'\x1c\x94\x8b...'  ← encrypted bytes
+decrypt() ফাংশন
+python
+def decrypt(ct, key):
+    key = key.encode()[:8].ljust(8, b' ')
+    cipher = DES.new(key, DES.MODE_ECB)
+    pt = unpad(cipher.decrypt(ct), 8)
+    return pt.decode()
+
+ধাপ ১ — key ঠিক করো:
+
+একই নিয়মে → encrypt এর মতো
+
+ধাপ ২ — নতুন cipher object বানাও:
+
+ECB mode এ decrypt এর জন্য
+নতুন object লাগে!
+
+ধাপ ৩ — decrypt করো:
+
+python
+pt = unpad(cipher.decrypt(ct), 8)
+cipher.decrypt(ct):
+b'\x1c\x94\x8b...' → b'HELLO\x03\x03\x03'
+
+unpad(..., 8):
+b'HELLO\x03\x03\x03' → b'HELLO'
+
+ধাপ ৪ — bytes থেকে text:
+
+python
+return pt.decode()
+b'HELLO' → "HELLO" ✅
+আগের কোড vs এই কোড
+python
+# আগের কোড:
+key = b'8bytekey'  ← সরাসরি দেওয়া
+
+# এই কোড:
+key = key.encode()[:8].ljust(8, b' ')  ← নিজেই ঠিক করে নেয়!
+আগের কোড → ঠিক ৮টি দিতে হতো, না হলে Error!
+এই কোড  → যেকোনো দৈর্ঘ্যের key দাও, নিজেই সামলাবে!
+পুরো আউটপুট
+Enter message: HELLO
+Enter key (max 8 chars): SECRET
+
+Encrypted (bytes): b'\x1c\x94\x8b\x16\x8f\x3b\x2a\x4e'
+Decrypted: HELLO ✅
+এক কথায়
+key ঠিক করো  → ৮ byte বানাও
+pad          → block পূরণ করো
+encrypt      → তালা লাগাও
+decrypt      → খোলো
+unpad        → বাড়তি সরাও
+decode       → bytes → text
+কাজ	সহজ কথা
+[:8]	৮ এর বেশি কেটে ফেলো
+ljust(8)	কম হলে স্পেস দাও
+pad	block ভরাট করো
+unpad	ভরাট সরাও
+encode	text → bytes
+decode	bytes → text
+
+
+
+
+
+
+E2-2	Write a Python program to encrypt and decrypt a message using the RSA algorithm.
+
+Theory — RSA কী?
+RSA = Rivest, Shamir, Adleman
+তিনজন বিজ্ঞানীর নামে নামকরণ
+
+পুরো internet এর security এর ভিত্তি!
+Bank, Gmail, Facebook সব RSA ব্যবহার করে
+মূল ধারণা
+দুটো চাবি থাকে:
+
+Public Key  → সবাইকে দাও (তালা)
+Private Key → শুধু নিজে রাখো (চাবি)
+
+Public key দিয়ে encrypt করো
+Private key দিয়ে decrypt করো
+RSA এর ৫টি ধাপ
+ধাপ ১ — দুটো Prime Number নাও
+p = 61
+q = 53
+ধাপ ২ — n বের করো
+n = p × q
+n = 61 × 53
+n = 3233
+
+এটা Public Key এর অংশ
+ধাপ ৩ — phi বের করো
+phi = (p-1) × (q-1)
+phi = 60 × 52
+phi = 3120
+
+এটা গোপন রাখতে হবে!
+ধাপ ৪ — e নাও (Public Exponent)
+e = 17
+
+শর্ত:
+১। e এবং phi এর GCD = 1 হতে হবে
+   GCD(17, 3120) = 1 ✅
+
+Public Key = (e, n) = (17, 3233)
+ধাপ ৫ — d বের করো (Private Exponent)
+e × d ≡ 1 (mod phi)
+17 × d ≡ 1 (mod 3120)
+
+d = 2753
+
+যাচাই:
+17 × 2753 = 46801
+46801 % 3120 = 1 ✅
+
+Private Key = (d, n) = (2753, 3233)
+Encrypt কীভাবে হয়?
+message = 65
+e = 17
+n = 3233
+
+c = m^e mod n
+c = 65^17 mod 3233
+c = 2790
+
+Encrypted = 2790
+Decrypt কীভাবে হয়?
+c = 2790
+d = 2753
+n = 3233
+
+m = c^d mod n
+m = 2790^2753 mod 3233
+m = 65 ✅
+
+Decrypted = 65
+Code — ধাপে ধাপে
+rsa_keygen() ফাংশন
+python
+def rsa_keygen(p, q, e):
+    n = p * q
+    phi = (p-1) * (q-1)
+    d = pow(e, -1, phi)
+    return (e, n), (d, n)
+n = 61 × 53 = 3233
+phi = 60 × 52 = 3120
+
+pow(e, -1, phi)
+→ e এর modular inverse বের করে
+→ এমন d যেন e×d % phi = 1
+→ d = 2753
+
+return:
+Public Key  = (17, 3233)
+Private Key = (2753, 3233)
+rsa_encrypt() ফাংশন
+python
+def rsa_encrypt(m, pub):
+    e, n = pub
+    return pow(m, e, n)
+pub = (17, 3233)
+e = 17, n = 3233
+
+pow(65, 17, 3233)
+= 65^17 mod 3233
+= 2790
+rsa_decrypt() ফাংশন
+python
+def rsa_decrypt(c, priv):
+    d, n = priv
+    return pow(c, d, n)
+priv = (2753, 3233)
+d = 2753, n = 3233
+
+pow(2790, 2753, 3233)
+= 2790^2753 mod 3233
+= 65 ✅
+পুরো আউটপুট
+Enter prime p: 61
+Enter prime q: 53
+Enter public exponent e: 17
+Enter message (number): 65
+
+Public key : (17, 3233)
+Private key: (2753, 3233)
+Message    : 65
+Encrypted  : 2790
+Decrypted  : 65 ✅
+এক কথায়
+p, q     → দুটো prime number
+n        → p × q (সবাই জানে)
+phi      → (p-1)(q-1) (গোপন)
+e        → public exponent (সবাই জানে)
+d        → private exponent (শুধু নিজে)
+
+Encrypt  → c = m^e mod n
+Decrypt  → m = c^d mod n
+
+
+
+
+E2-3	Write a Python program to simulate the Diffie-Hellman key exchange
+
+Theory — Diffie-Hellman কী?
+দুইজন মানুষ গোপনে key আদান-প্রদান করতে চায়
+হ্যাকার সব দেখছে কিন্তু বুঝতে পারছে না!
+এটাই Diffie-Hellman!
+তালার উদাহরণ
+সবাই জানে:
+p = 7  (prime number)
+g = 3  (primitive root)
+
+শুধু Alice জানে:
+a = 4  (Alice এর private key)
+
+শুধু Bob জানে:
+b = 5  (Bob এর private key)
+৩টি ধাপ
+ধাপ ১ — Public Key বানাও
+Alice বানায়:
+A = g^a mod p
+A = 3^4 mod 7
+A = 81 mod 7
+A = 4  ← সবাইকে দিল
+
+Bob বানায়:
+B = g^b mod p
+B = 3^5 mod 7
+B = 243 mod 7
+B = 5  ← সবাইকে দিল
+ধাপ ২ — Shared Key বানাও
+Alice হিসাব করে:
+key1 = B^a mod p
+key1 = 5^4 mod 7
+key1 = 625 mod 7
+key1 = 2 ✅
+
+Bob হিসাব করে:
+key2 = A^b mod p
+key2 = 4^5 mod 7
+key2 = 1024 mod 7
+key2 = 2 ✅
+ধাপ ৩ — কেন দুটো key সমান?
+key1 = B^a mod p
+     = (g^b)^a mod p
+     = g^(a×b) mod p
+
+key2 = A^b mod p
+     = (g^a)^b mod p
+     = g^(a×b) mod p
+
+দুটোই g^(a×b) mod p
+তাই সবসময় সমান! ✅
+হ্যাকার কী দেখে?
+হ্যাকার দেখে:     হ্যাকার দেখে না:
+p = 7   ✅         a = 4  ❌
+g = 3   ✅         b = 5  ❌
+A = 4   ✅
+B = 5   ✅
+
+shared key = 2 বের করতে পারে না! ✅
+Code — ধাপে ধাপে
+Input
+python
+p = int(input("Enter prime number (p): "))    # p = 7
+g = int(input("Enter primitive root (g): "))  # g = 3
+a = int(input("Enter Alice private key: "))   # a = 4
+b = int(input("Enter Bob private key: "))     # b = 5
+Public Key
+python
+A = pow(g, a, p)   # Alice এর public key
+B = pow(g, b, p)   # Bob এর public key
+A = pow(3, 4, 7) = 3^4 mod 7 = 81 mod 7 = 4
+B = pow(3, 5, 7) = 3^5 mod 7 = 243 mod 7 = 5
+Shared Key
+python
+key1 = pow(B, a, p)   # Alice হিসাব করে
+key2 = pow(A, b, p)   # Bob হিসাব করে
+key1 = pow(5, 4, 7) = 5^4 mod 7 = 625 mod 7  = 2
+key2 = pow(4, 5, 7) = 4^5 mod 7 = 1024 mod 7 = 2
+পুরো আউটপুট
+Enter prime number (p): 7
+Enter primitive root (g): 3
+Enter Alice private key: 4
+Enter Bob private key: 5
+
+Public Values:
+Alice sends: 4
+Bob sends:   5
+
+Shared Key (Alice): 2
+Shared Key (Bob):   2  ← দুটো সমান! ✅
+এক কথায়
+g, p      → সবাই জানে
+a, b      → শুধু নিজে জানে
+A, B      → public key, সবাইকে দেয়
+key1=key2 → গোপন shared key
+হ্যাকার  → কিছুই বুঝতে পারে না!
+
+
+E2-4	Write a Python program to perform modular arithmetic operations using a primitive root.
+
+Theory
+Modular Arithmetic কী?
+ঘড়ির কথা ভাবো:
+১২ এর পরে ১৩ না হয়ে আবার ১ হয়
+
+এটাই Modular Arithmetic!
+একটা সীমার মধ্যে ঘুরতে থাকে
+% মানে ভাগশেষ:
+
+9  % 7 = 2  (9 ÷ 7 = ১ ভাগ, বাকি ২)
+20 % 7 = 6  (20 ÷ 7 = ২ ভাগ, বাকি ৬)
+যোগ, বিয়োগ, গুণ
+
+ধরো a=4, b=5, p=7
+
+যোগ:
+4 + 5 = 9
+9 % 7 = 2
+
+বিয়োগ:
+4 - 5 = -1
+-1 % 7 = 6  ← Python ঋণাত্মকেও সঠিক দেয়
+
+গুণ:
+4 × 5 = 20
+20 % 7 = 6
+Primitive Root কী?
+p = 7, g = 3
+
+g কে ১ থেকে p-1 পর্যন্ত power দাও
+তারপর % p করো
+
+3^1 mod 7 = 3
+3^2 mod 7 = 2
+3^3 mod 7 = 6
+3^4 mod 7 = 4
+3^5 mod 7 = 5
+3^6 mod 7 = 1
+
+ফলাফল: 3,2,6,4,5,1
+১ থেকে ৬ সব এসেছে!
+তাই 3 হলো Primitive Root ✅
+Code — ধাপে ধাপে
+Input
+python
+p = int(input("Enter prime number (p): "))      # p = 7
+g = int(input("Enter primitive root (g): "))    # g = 3
+a = int(input("Enter first number (a): "))      # a = 4
+b = int(input("Enter second number (b): "))     # b = 5
+যোগ
+python
+print("Addition:", (a + b) % p)
+(4 + 5) % 7
+= 9 % 7
+= 2
+বিয়োগ
+python
+print("Subtraction:", (a - b) % p)
+(4 - 5) % 7
+= -1 % 7
+= 6
+গুণ
+python
+print("Multiplication:", (a * b) % p)
+(4 × 5) % 7
+= 20 % 7
+= 6
+Power
+python
+print("g^a mod p:", pow(g, a, p))
+pow(3, 4, 7)
+= 3^4 mod 7
+= 81 mod 7
+= 4
+
+pow(g, a, p) → তিনটা দিলে সরাসরি modular power বের করে
+
+Primitive Root যাচাই
+python
+for i in range(1, p):
+    print(f"{g}^{i} mod {p} =", pow(g, i, p))
+range(1, 7) → 1,2,3,4,5,6
+
+i=1 → 3^1 mod 7 = 3
+i=2 → 3^2 mod 7 = 2
+i=3 → 3^3 mod 7 = 6
+i=4 → 3^4 mod 7 = 4
+i=5 → 3^5 mod 7 = 5
+i=6 → 3^6 mod 7 = 1
+
+সব সংখ্যা এসেছে → 3 সত্যিই Primitive Root ✅
+পুরো আউটপুট
+Enter prime number (p): 7
+Enter primitive root (g): 3
+Enter first number (a): 4
+Enter second number (b): 5
+
+--- Modular Arithmetic Operations ---
+Addition:       2
+Subtraction:    6
+Multiplication: 6
+g^a mod p:      4
+
+--- Powers of g mod p ---
+3^1 mod 7 = 3
+3^2 mod 7 = 2
+3^3 mod 7 = 6
+3^4 mod 7 = 4
+3^5 mod 7 = 5
+3^6 mod 7 = 1  ← শেষে 1 আসে!
+
+
+E2-5 Write a Python program to compute the GCD of two numbers using the Extended Euclidean Algorithm.
+
+Theory
+সাধারণ GCD vs Extended GCD
+সাধারণ GCD:
+GCD(48, 18) = 6
+শুধু এটুকুই বলে
+
+Extended GCD:
+GCD(48, 18) = 6
+এর সাথে x, y বের করে
+
+যেন: 48×x + 18×y = 6 হয়
+কেন x, y দরকার?
+RSA Cryptography তে
+Private key বের করতে
+এই x, y লাগে!
+Code — ধাপে ধাপে
+Base Case
+python
+if b == 0:
+    return a, 1, 0
+b = 0 হলে GCD = a
+কেন x=1, y=0 দিলাম?
+
+a×1 + 0×0 = a ✅
+সমীকরণ মেলে তাই!
+Recursive Call
+python
+gcd, x1, y1 = extended_gcd(b, a % b)
+নিজেই নিজেকে ডাকে
+ছোট সংখ্যা দিয়ে আবার চালায়
+
+extended_gcd(48, 18)
+   → extended_gcd(18, 12)
+      → extended_gcd(12, 6)
+         → extended_gcd(6, 0)
+            → থামো! b=0
+x, y হিসাব
+python
+x = y1
+y = x1 - (a // b) * y1
+আগের ধাপের x1, y1 নিয়ে
+নতুন x, y বানাও
+হাতে কলমে — extended_gcd(48, 18)
+নিচে নামা
+extended_gcd(48, 18) → ডাকে (18, 12)
+extended_gcd(18, 12) → ডাকে (12, 6)
+extended_gcd(12, 6)  → ডাকে (6, 0)
+extended_gcd(6, 0)   → থামো! b=0
+উপরে ওঠা
+🔴 extended_gcd(6, 0) — Base Case
+b=0 → থামো!
+return gcd=6, x=1, y=0
+🟠 extended_gcd(12, 6)
+নিচ থেকে পেলাম: x1=1, y1=0
+
+x = y1 = 0
+y = x1 - (12//6) × y1
+y = 1  - 2 × 0 = 1
+
+return gcd=6, x=0, y=1
+
+যাচাই: 12×0 + 6×1 = 6 ✅
+🟡 extended_gcd(18, 12)
+নিচ থেকে পেলাম: x1=0, y1=1
+
+x = y1 = 1
+y = x1 - (18//12) × y1
+y = 0  - 1 × 1 = -1
+
+return gcd=6, x=1, y=-1
+
+যাচাই: 18×1 + 12×(-1) = 6 ✅
+🟢 extended_gcd(48, 18)
+নিচ থেকে পেলাম: x1=1, y1=-1
+
+x = y1 = -1
+y = x1 - (48//18) × y1
+y = 1  - 2 × (-1) = 3
+
+return gcd=6, x=-1, y=3
+
+যাচাই: 48×(-1) + 18×3 = 6 ✅
+পুরো flow এক নজরে
+নিচে নামা:
+(48,18)→(18,12)→(12,6)→(6,0)→থামো!
+
+উপরে ওঠা:
+(6,0)  → gcd=6, x=1,  y=0
+(12,6) → gcd=6, x=0,  y=1
+(18,12)→ gcd=6, x=1,  y=-1
+(48,18)→ gcd=6, x=-1, y=3 ✅
+আউটপুট
+Enter first number: 48
+Enter second number: 18
+
+GCD: 6
+x: -1
+y: 3
+
+Verification:
+48*(-1) + 18*(3) = 6 ✅
+এক কথায়
+নিচে নামে  → GCD বের করে
+উপরে ওঠে  → x, y হিসাব করে
+শেষে দেয়  → GCD, x, y
+
+যেন: a×x + b×y = GCD হয়
