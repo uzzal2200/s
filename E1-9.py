@@ -1,4 +1,4 @@
-# Write a Python program to encrypt and decrypt a message using the ElGamal cryptosystem.
+  # Write a Python program to encrypt and decrypt a message using the ElGamal cryptosystem.
 
 import random
 

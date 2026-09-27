@@ -26,3 +26,6 @@ plain  = decrypt(cipher, key)
 # Output
 print("\nEncrypted (bytes):", cipher)
 print("Decrypted:", plain)
+
+
+# message = "HELLO", key = "SECRET12
